@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LocalDebuggerCommand>C:\Users\gengyuchen\source\repos\test_product_defect_module\bin\test_product_defect_moduled.exe</LocalDebuggerCommand>
+    <LocalDebuggerWorkingDirectory>C:\Users\gengyuchen\source\repos\test_product_defect_module\bin</LocalDebuggerWorkingDirectory>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerAttach>false</LocalDebuggerAttach>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LocalDebuggerCommand>D:\ShellDetectSoftware_With_Product_Module\InspectionClient_1\bin\InspectionClientd.exe</LocalDebuggerCommand>
+    <LocalDebuggerWorkingDirectory>D:\ShellDetectSoftware_With_Product_Module\InspectionClient_1\bin</LocalDebuggerWorkingDirectory>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
+  <PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <QtLastBackgroundBuild>2022-12-28T07:00:20.7600713Z</QtLastBackgroundBuild>
+  </PropertyGroup>
+  <PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <QtLastBackgroundBuild>2022-12-28T07:00:20.8250725Z</QtLastBackgroundBuild>
+  </PropertyGroup>
+</Project>

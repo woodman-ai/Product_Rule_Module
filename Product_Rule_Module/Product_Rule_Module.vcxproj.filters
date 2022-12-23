@@ -1,0 +1,156 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>qml;cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>qrc;rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Form Files">
+      <UniqueIdentifier>{99349809-55BA-4b9d-BF79-8FDBB0286EB3}</UniqueIdentifier>
+      <Extensions>ui</Extensions>
+    </Filter>
+    <Filter Include="Translation Files">
+      <UniqueIdentifier>{639EADAA-A684-42e4-A9AD-28FC9BCB8F7C}</UniqueIdentifier>
+      <Extensions>ts</Extensions>
+    </Filter>
+    <Filter Include="product_component">
+      <UniqueIdentifier>{4d2d2dd8-ca54-4ea8-a7c0-82693b8d3267}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="export">
+      <UniqueIdentifier>{b87cff4a-b6a7-4863-b770-fe3e3b8dd351}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="rule_component">
+      <UniqueIdentifier>{1b3a89ae-7dc9-426a-b66f-6db9d6b72bea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="widget">
+      <UniqueIdentifier>{a6900c87-5cfa-4356-ba5c-ad176a905290}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <QtMoc Include="widget\AddRuleConditionWidget.h">
+      <Filter>widget</Filter>
+    </QtMoc>
+    <QtMoc Include="widget\ProductLevelSettingWidget.h">
+      <Filter>widget</Filter>
+    </QtMoc>
+    <QtMoc Include="widget\RoiWidget.h">
+      <Filter>widget</Filter>
+    </QtMoc>
+    <QtMoc Include="widget\RuleSettingDlg.h">
+      <Filter>widget</Filter>
+    </QtMoc>
+    <QtMoc Include="widget\RuleSettingWgt.h">
+      <Filter>widget</Filter>
+    </QtMoc>
+    <QtMoc Include="widget\SetMaxDefectCountDialog.h">
+      <Filter>widget</Filter>
+    </QtMoc>
+    <QtMoc Include="widget\CheckSurfaceRoiWidget.h">
+      <Filter>widget</Filter>
+    </QtMoc>
+    <ClInclude Include="export\Rule_Manager.h">
+      <Filter>export</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="product_component\product_info_manager.cpp">
+      <Filter>product_component</Filter>
+    </ClCompile>
+    <ClCompile Include="utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rule_component\rule_class.cpp">
+      <Filter>rule_component</Filter>
+    </ClCompile>
+    <ClCompile Include="rule_component\Rule_Attri_Manager.cpp">
+      <Filter>rule_component</Filter>
+    </ClCompile>
+    <ClCompile Include="widget\AddRuleConditionWidget.cpp">
+      <Filter>widget</Filter>
+    </ClCompile>
+    <ClCompile Include="widget\ProductLevelSettingWidget.cpp">
+      <Filter>widget</Filter>
+    </ClCompile>
+    <ClCompile Include="widget\RoiWidget.cpp">
+      <Filter>widget</Filter>
+    </ClCompile>
+    <ClCompile Include="widget\RuleSettingDlg.cpp">
+      <Filter>widget</Filter>
+    </ClCompile>
+    <ClCompile Include="widget\RuleSettingWgt.cpp">
+      <Filter>widget</Filter>
+    </ClCompile>
+    <ClCompile Include="widget\SetMaxDefectCountDialog.cpp">
+      <Filter>widget</Filter>
+    </ClCompile>
+    <ClCompile Include="widget\WidgetScaleAssist.cpp">
+      <Filter>widget</Filter>
+    </ClCompile>
+    <ClCompile Include="widget\CheckSurfaceRoiWidget.cpp">
+      <Filter>widget</Filter>
+    </ClCompile>
+    <ClCompile Include="Rule_Manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="export\product_info_manager.h">
+      <Filter>export</Filter>
+    </ClInclude>
+    <ClInclude Include="export\product_rule_module_global.h">
+      <Filter>export</Filter>
+    </ClInclude>
+    <ClInclude Include="rule_component\rule_typedef.h">
+      <Filter>rule_component</Filter>
+    </ClInclude>
+    <ClInclude Include="rule_component\rule_class.h">
+      <Filter>rule_component</Filter>
+    </ClInclude>
+    <ClInclude Include="rule_component\Rule_Attri_Manager.h">
+      <Filter>rule_component</Filter>
+    </ClInclude>
+    <ClInclude Include="widget\WidgetScaleAssist.h">
+      <Filter>widget</Filter>
+    </ClInclude>
+    <ClInclude Include="export\Product_Rule_TypeDef.h">
+      <Filter>export</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <QtUic Include="widget\AddRuleConditionWidget.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="widget\ProductLevelSettingWidget.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="widget\RuleSettingDlg.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="widget\RuleSettingWgt.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="widget\SetMaxDefectCountDialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="widget\CheckSurfaceRoiWidget.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="widget\MergeDefectSettingDlg.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="widget\MergeDefectSettingWgt.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+  </ItemGroup>
+</Project>
