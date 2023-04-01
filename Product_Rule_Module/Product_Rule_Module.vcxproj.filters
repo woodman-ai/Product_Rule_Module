@@ -62,18 +62,15 @@
     <ClInclude Include="export\Rule_Manager.h">
       <Filter>export</Filter>
     </ClInclude>
+    <ClInclude Include="export\Product_Rule_Export.h">
+      <Filter>export</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="product_component\product_info_manager.cpp">
-      <Filter>product_component</Filter>
-    </ClCompile>
     <ClCompile Include="utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="rule_component\rule_class.cpp">
-      <Filter>rule_component</Filter>
-    </ClCompile>
-    <ClCompile Include="rule_component\Rule_Attri_Manager.cpp">
       <Filter>rule_component</Filter>
     </ClCompile>
     <ClCompile Include="widget\AddRuleConditionWidget.cpp">
@@ -103,11 +100,11 @@
     <ClCompile Include="Rule_Manager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Product_Rule_Export.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="export\product_info_manager.h">
-      <Filter>export</Filter>
-    </ClInclude>
     <ClInclude Include="export\product_rule_module_global.h">
       <Filter>export</Filter>
     </ClInclude>
@@ -115,9 +112,6 @@
       <Filter>rule_component</Filter>
     </ClInclude>
     <ClInclude Include="rule_component\rule_class.h">
-      <Filter>rule_component</Filter>
-    </ClInclude>
-    <ClInclude Include="rule_component\Rule_Attri_Manager.h">
       <Filter>rule_component</Filter>
     </ClInclude>
     <ClInclude Include="widget\WidgetScaleAssist.h">

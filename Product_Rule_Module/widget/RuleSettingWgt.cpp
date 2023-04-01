@@ -4,6 +4,7 @@
 #include "qjsonarray.h"
 #include <algorithm>
 #include "utils.h"
+#include "Product_Rule_Export.h"
 
 RuleSettingWgt::RuleSettingWgt(QWidget* parent)
 	: QWidget(parent)
@@ -20,27 +21,25 @@ RuleSettingWgt::~RuleSettingWgt()
 
 void RuleSettingWgt::init()
 {
-	auto surface = m_src_check_surface_info_manager->enum_check_surface();
+	auto surface = Product_Surface_Defect_Feature_Manager::get_all_product_surface_info();
 	m_cur_select_surface_name = "";
 	for (const auto& item : surface)
 	{
-		ui->listWidget->addItem(item);
+		ui->listWidget->addItem(QString::fromStdWString(item.first));
 	}
 }
 
-void RuleSettingWgt::set_data(const product_info_manager* src_product_info_manager, const CheckSurfaceManager* src_check_surface_info_manager,const Product_Rule&  product_rules, const std::vector<Product_Level>& product_level)
+void RuleSettingWgt::set_data(const Product_Rule&  product_rules, const std::vector<Product_Level>& product_level)
 {
-	m_src_product_info_manager = src_product_info_manager;
-	m_src_check_surface_info_manager = src_check_surface_info_manager;
 	m_product_rules = product_rules;
 	ui->rule_widget->init_product_level(product_level);
 }
 
-Surface_Rule* RuleSettingWgt::get_surface_rule_by_name(const QString& str_name)
+ProductSurface_Rule* RuleSettingWgt::get_surface_rule_by_name(const QString& str_name)
 {
 	for (int i = 0 ; i < m_product_rules.size(); i++)
 	{
-		if (m_product_rules[i].str_check_surface_name == str_name)
+		if (m_product_rules[i].str_product_surface_name == str_name)
 		{
 			return &m_product_rules[i];
 		}
@@ -51,7 +50,16 @@ Surface_Rule* RuleSettingWgt::get_surface_rule_by_name(const QString& str_name)
 
 bool RuleSettingWgt::save_rule(const QString& strName)
 {
-	int index = m_src_check_surface_info_manager->get_check_surface_index(strName);
+	int index = -1;
+	for (int i = 0; i < ui->listWidget->count(); i++)
+	{
+		if (ui->listWidget->item(i)->text() == strName)
+		{
+			index = i;
+			break;
+		}
+	}
+	
 	if (index == -1)
 		return false;
 
@@ -67,7 +75,7 @@ bool RuleSettingWgt::save_rule(const QString& strName)
 		return false;
 	else
 	{
-		new_rule.str_check_surface_name = strName;
+		new_rule.str_product_surface_name = strName;
 		auto p_rule = get_surface_rule_by_name(strName);
 		if(p_rule)
 			*p_rule = new_rule;
@@ -104,16 +112,22 @@ void RuleSettingWgt::slot_combo_area_sel(const QString& str_surface_name)
 	m_cur_select_surface_name = str_surface_name;
 
 	ui->rule_widget->clear();
-	auto data = m_src_check_surface_info_manager->get_check_surface_data(m_cur_select_surface_name);
-	if (data)
+	auto data = get_product_surface_defect_features(str_surface_name.toStdWString());
+	std::vector<QString> defect_name_vect;
+	for (const auto& item : data.defect_filter_features)
 	{
-		ui->rule_widget->set_surface_defects(data->surface_defect_name_vect,data->surface_gray_level_surface_name_vect);
-		ui->rule_widget->set_checksurface_product_surface(data->contain_product_surface_vect);
+		defect_name_vect.push_back(QString::fromStdWString(item.first));
 	}
-	
-	
+
+	ui->rule_widget->set_surface_defects(defect_name_vect);
+	auto surface_config = Product_Config::get_surface_config(str_surface_name.toStdWString());
+	if(surface_config)
+		ui->rule_widget->set_product_surface_img(QImage(QString::fromStdWString(surface_config->str_img_path)));	
+
 	auto p_suface_rule = get_surface_rule_by_name(str_surface_name);	
-	ui->rule_widget->set_surface_rules({});
+	ProductSurface_Rule temp;
+	temp.str_product_surface_name = str_surface_name;
+	ui->rule_widget->set_surface_rules(temp);
 	if (p_suface_rule)
 	{
 		ui->rule_widget->set_surface_rules(*p_suface_rule);

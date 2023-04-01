@@ -6,7 +6,6 @@
 #include "SetMaxDefectCountDialog.h"
 #include <qjsonobject.h>
 #include "qinputdialog.h"
-#include "Rule_Attri_Manager.h"
 #include "qcolordialog.h"
 ProductLevelSettingWidget::ProductLevelSettingWidget(QWidget* parent)
 	: QWidget(parent)
@@ -29,7 +28,7 @@ ProductLevelSettingWidget::ProductLevelSettingWidget(QWidget* parent)
 	ui.tree_rule->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
 }
 
-void ProductLevelSettingWidget::init_tree_by_one_surface(const CheckSurface_One_Rule& rule)
+void ProductLevelSettingWidget::init_tree_by_one_surface(const ProductSurface_One_Rule& rule)
 {
 	auto get_product_level = [](const QString& str_product_level,const std::vector<Product_Level_Defects>& rule)->std::optional<std::reference_wrapper<const Product_Level_Defects>>
 	{
@@ -73,8 +72,24 @@ void ProductLevelSettingWidget::init_tree_by_one_surface(const CheckSurface_One_
 	}
 }
 
+QString ProductLevelSettingWidget::get_node_defect_name(productTreeNode* node)
+{
+	if (node->is_defect_name())
+	{
+		return node->text(0);
+	}
+	productTreeNode* parent =(productTreeNode*)node->parent();
+	if (parent->is_defect_name())
+	{
+		return parent->text(0);
+	}
+
+	return get_node_defect_name(parent);
+}
+
 void ProductLevelSettingWidget::add_recursive_rule_node_2_tree(const Defect_Node& recursive_rule_node, productTreeNode* parent)
 {
+	auto surface_name = m_cur_surface_rule.str_product_surface_name.toStdWString();
 	auto tree_node = new productTreeNode(parent);
 	if(recursive_rule_node.node_type == Defect_Node_Type::And)
 	{
@@ -88,7 +103,7 @@ void ProductLevelSettingWidget::add_recursive_rule_node_2_tree(const Defect_Node
 	}
 	else
 	{
-		productTreeNode::Rule_Calc_Node_2_productTreeNode(recursive_rule_node.expression, tree_node);
+		productTreeNode::Rule_Calc_Node_2_productTreeNode(surface_name,recursive_rule_node.expression, tree_node);
 	}
 
 	for (const auto& item : recursive_rule_node.subNodes)
@@ -99,8 +114,9 @@ void ProductLevelSettingWidget::add_recursive_rule_node_2_tree(const Defect_Node
 
 void ProductLevelSettingWidget::add_expression_to_node(productTreeNode* parent, int index, const Rule_Calc_Node& calc_node)
 {
+	auto surface_name = m_cur_surface_rule.str_product_surface_name.toStdWString();
 	auto tree_node = new productTreeNode(nullptr);
-	productTreeNode::Rule_Calc_Node_2_productTreeNode(calc_node, tree_node);
+	productTreeNode::Rule_Calc_Node_2_productTreeNode(surface_name,calc_node, tree_node);
 	parent->insertChild(index, tree_node);
 }
 
@@ -150,13 +166,11 @@ Defect_Node ProductLevelSettingWidget::get_recursive_node_by_tree_node(productTr
 	else
 	{
 		expr.node_type = Defect_Node_Type::Expression;
-		auto [str_attri, str_relation, compare_value, gray_index,a_index] = tree_node->get_exp_set();
+		auto [str_attri, str_relation, compare_value] = tree_node->get_exp_set();
 		expr.expression.str_attri_name = str_attri;
 		expr.expression.str_relation = str_relation;
 		expr.expression.compare_value = compare_value;
-		expr.expression.g_index = gray_index;
-		expr.expression.a_index = a_index;
-		expr.expression.func = Rule_Attri_Manager::generate_defect_rule_node(expr.expression);
+		expr.expression.func = generate_defect_rule_node( m_cur_surface_rule.str_product_surface_name, expr.expression);
 	}
 
 	int child_count = tree_node->childCount();
@@ -173,14 +187,13 @@ ProductLevelSettingWidget::~ProductLevelSettingWidget()
 {
 }
 
-void ProductLevelSettingWidget::set_surface_rules(const Surface_Rule& rules)
+void ProductLevelSettingWidget::set_surface_rules(const ProductSurface_Rule& rules)
 {
 	m_cur_surface_rule = rules;
 	if (m_cur_surface_rule.surface_rules.size() == 0)
 	{
-		CheckSurface_One_Rule one_rule;
+		ProductSurface_One_Rule one_rule;
 		one_rule.str_name = QStringLiteral("д╛хо");
-		one_rule.valid_product_surface = ui.roi_widget->get_checksurface_contain_product_surface();
 		m_cur_surface_rule.surface_rules.push_back(one_rule);
 	}
 }
@@ -272,7 +285,9 @@ void ProductLevelSettingWidget::slot_add_expression()
 	if (node->is_expression() && !parent->is_and() && !parent->is_or())
 		return;
 
-	AddRuleConditionWidget dlg(m_gray_photo_name);
+	auto defect_name = get_node_defect_name(node);
+
+	AddRuleConditionWidget dlg(m_cur_surface_rule.str_product_surface_name.toStdWString(),defect_name.toStdWString());
 	if (dlg.exec() == QDialog::Accepted)
 	{
 		auto expr = dlg.GetExpression();
@@ -382,7 +397,7 @@ void ProductLevelSettingWidget::add_roi()
 	if (surface_name.isEmpty())
 		return;
 
-	CheckSurface_One_Rule one_rule = m_cur_surface_rule.surface_rules[index];
+	ProductSurface_One_Rule one_rule = m_cur_surface_rule.surface_rules[index];
 	one_rule.str_name = surface_name;
 	one_rule.rule_contours.clear();
 	m_cur_surface_rule.surface_rules.push_back(one_rule);
@@ -445,12 +460,10 @@ bool ProductLevelSettingWidget::TestCondition()
 	return true;
 }
 
-CheckSurface_One_Rule ProductLevelSettingWidget::get_surface_one_rule_from_widget()
+ProductSurface_One_Rule ProductLevelSettingWidget::get_surface_one_rule_from_widget()
 {
-	CheckSurface_One_Rule one_rule;
-	auto [contours,valid_surface] = ui.roi_widget->get_polygon();
-	one_rule.rule_contours = contours;
-	one_rule.valid_product_surface = valid_surface;
+	ProductSurface_One_Rule one_rule;
+	one_rule.rule_contours = ui.roi_widget->get_polygon();	
 	one_rule.str_roi_color = ui.btn_roi_color->whatsThis();
 	int count = ui.tree_rule->topLevelItemCount();
 	for (int i = 0; i < count; i++)
@@ -475,7 +488,7 @@ bool ProductLevelSettingWidget::save_rule(int index)
 	return true;
 }
 
-std::tuple<bool, Surface_Rule> ProductLevelSettingWidget::get_surface_rules()
+std::tuple<bool, ProductSurface_Rule> ProductLevelSettingWidget::get_surface_rules()
 {
 	if (!save_rule(ui.combo_roi->currentIndex()))
 		return { false,{} };
@@ -528,14 +541,15 @@ void ProductLevelSettingWidget::slot_double_click_item(QTreeWidgetItem* item, in
 	}
 	else if (node->is_expression() && column == 0)
 	{
-		AddRuleConditionWidget dlg(m_gray_photo_name);
+		auto defect_name = get_node_defect_name(node);
+		auto surface_name = m_cur_surface_rule.str_product_surface_name.toStdWString();
+		AddRuleConditionWidget dlg(surface_name, defect_name.toStdWString());
 		auto calc_node = productTreeNode::productTreeNode_2_Rule_Calc_Node(node);
 		dlg.set_current_conditioin(calc_node);
 		if (dlg.exec() == QDialog::Accepted)
 		{
 			auto expr = dlg.GetExpression();
-			productTreeNode::Rule_Calc_Node_2_productTreeNode(expr, node);			
-			node->setText(0, Rule_Calc_Node_2_String(expr));
+			productTreeNode::Rule_Calc_Node_2_productTreeNode(surface_name,expr, node);
 		}
 	}
 }
@@ -563,24 +577,20 @@ void ProductLevelSettingWidget::slot_combo_roi_change(int index)
 	ui.btn_roi_color->setStyleSheet(str_style);
 	ui.btn_roi_color->setWhatsThis(str_color);
 	ui.roi_widget->set_roi_color(m_cur_surface_rule.surface_rules[index].str_roi_color);
-	std::map<QString,std::vector<all_roi_color_polygon>> other_rule_polygon;
+	std::vector<all_roi_color_polygon> other_rule_polygon;
 	for (int i = 0; i < m_cur_surface_rule.surface_rules.size(); i++)
 	{
 		if (i != index)
 		{
 			const auto& rule = m_cur_surface_rule.surface_rules[i];
-			auto color = rule.str_roi_color;
-			for (const auto& roi : rule.rule_contours)
-			{
-				all_roi_color_polygon temp;
-				temp.str_color = color;
-				temp.all_polygon = roi.second;
-				other_rule_polygon[roi.first].push_back(temp);
-
-			}
+			all_roi_color_polygon temp;
+			temp.str_color = rule.str_roi_color;
+			temp.all_polygon = rule.rule_contours;
+			other_rule_polygon.push_back(temp);
 		}
 	}
-	ui.roi_widget->set_polygon(m_cur_surface_rule.surface_rules[index].rule_contours, m_cur_surface_rule.surface_rules[index].valid_product_surface, other_rule_polygon);
+	
+	ui.roi_widget->set_polygon(m_cur_surface_rule.surface_rules[index].rule_contours, other_rule_polygon);
 	init_tree_by_one_surface(m_cur_surface_rule.surface_rules[index]);
 }
 
@@ -695,8 +705,8 @@ bool ProductLevelSettingWidget::CanInsertExpression(productTreeNode* pNode)
 	return true;
 }
 
-void ProductLevelSettingWidget::set_checksurface_product_surface(const std::vector<CheckSurface_Contain_ProductSurface::product_img_name_and_qimage>& product_surface_data)
+void ProductLevelSettingWidget::set_product_surface_img(const QImage& img)
 {
-	ui.roi_widget->set_product_surfaces(product_surface_data);
+	ui.roi_widget->set_product_surface_img(img);
 }
 

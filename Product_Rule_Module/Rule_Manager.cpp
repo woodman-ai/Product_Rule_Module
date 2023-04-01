@@ -3,7 +3,6 @@
 #include "utils.h"
 #include "RuleSettingDlg.h"
 #include "qjsonarray.h"
-#include "Rule_Attri_Manager.h"
 
 QString Rule_Manager::defect_rule_result_ok()
 {
@@ -20,129 +19,73 @@ QString Rule_Manager::defect_rule_result_trivial_defect()
 	return "rule_filter_trivial_defect";
 }
 
-std::map<check_attri_index, check_attri_value>  Rule_Manager::get_defect_attri(const Defect_Feature& feature)
+Rule_Manager::Rule_Manager()
 {
-	return Rule_Attri_Manager::get_check_attri_dict_from_defect(feature);
-}
-
-Rule_Manager::Rule_Manager(const Rule_Manager& left)
-{
-	*this = left;
+	m_product_surface_rule = new std::map<std::wstring, ProductSurface_Rule>();
 }
 
 Rule_Manager::~Rule_Manager()
 {
-	if (m_rule)
-		delete m_rule;
-	m_rule = nullptr;
-}
-
-Rule_Manager& Rule_Manager::operator = (const Rule_Manager& left)
-{
-	if (m_rule)
-		delete m_rule;
-	m_rule = nullptr;
-	if (left.m_rule)
-	{
-		m_rule = new std::vector<Surface_Rule>();
-		*m_rule = *left.m_rule;
-	}
-	return *this;
-}
-
-Rule_Manager::Rule_Manager(Rule_Manager&& left)
-{
-	if (m_rule)
-		delete m_rule;
-	m_rule = left.m_rule;
-	left.m_rule = nullptr;
+	delete m_product_surface_rule;
 }
 
 void Rule_Manager::load_from_json(const QString& str_path)
 {
-	auto obj = read_json_document(str_path);
+	auto obj = read_json_document(str_path + "/rule.json");
 	load_from_jsonobject(obj);
 }
 
 void Rule_Manager::save_to_json(const QString& str_path)
 {
-	if (m_rule)
+	Product_Rule all_rule;
+	for (const auto& item : *m_product_surface_rule)
 	{
-		auto obj = Product_Rule_2_json(*m_rule);
-		save_json_files(str_path, obj);
+		all_rule.push_back(item.second);
 	}
+	auto obj = Product_Rule_2_json(all_rule);
+	save_json_files(str_path, obj);
+
+	
 }
 
 void Rule_Manager::load_from_jsonobject(const QJsonObject& obj)
 {
-	if (m_rule == nullptr)
-		m_rule = new Product_Rule;
-	*m_rule = Product_Rule_from_json(obj);
-}
-
-void Rule_Manager::set_product_rule(const std::vector<Surface_Rule>& rules)
-{
-	if (m_rule == nullptr)
-		m_rule = new Product_Rule;
-	*m_rule = rules;
-}
-
-void Rule_Manager::get_rules(std::vector<Surface_Rule>& vect) const
-{
-	if (m_rule == nullptr)
-		return;
-	vect = *m_rule;
-}
-
-int  Rule_Manager::get_check_surface_index(const QString& str_check_surface_name)
-{
-	auto& surface_rule = *((std::vector<Surface_Rule>*)m_rule);
-	for (int i = 0; i < surface_rule.size(); i++)
+	auto all_rule = Product_Rule_from_json(obj);
+	m_product_surface_rule->clear();
+	for (const auto& item : all_rule)
 	{
-		if (surface_rule[i].str_check_surface_name == str_check_surface_name)
-			return i;
+		(*m_product_surface_rule)[item.str_product_surface_name.toStdWString()] = item;
 	}
-
-	return -1;	
 }
 
-std::set<int> Rule_Manager::get_surface_defect_inspect_gray(int rule_index, const QString& str_defect_name)
+void Rule_Manager::set_product_rule(const std::vector<ProductSurface_Rule>& rules)
 {
-	auto& surface_rule = *((std::vector<Surface_Rule>*)m_rule);
-	if (rule_index < 0 || rule_index >= surface_rule.size())
-		return {};
-	auto iter = surface_rule[rule_index]._defect_check_gray_index.find(str_defect_name);
-	if (iter == surface_rule[rule_index]._defect_check_gray_index.end())
-		return {};
-
-	return iter->second;
+	m_product_surface_rule->clear();
+	for (const auto& item : rules)
+	{
+		(*m_product_surface_rule)[item.str_product_surface_name.toStdWString()] = item;
+	}
 }
 
-std::set<int> Rule_Manager::get_surface_defect_inspect_area(int rule_index, const QString& str_defect_name)
+void Rule_Manager::get_rules(std::vector<ProductSurface_Rule>& vect) const
 {
-	auto& surface_rule = *((std::vector<Surface_Rule>*)m_rule);
-	if (rule_index < 0 || rule_index >= surface_rule.size())
-		return {};
-	auto iter = surface_rule[rule_index]._defect_check_area_index.find(str_defect_name);
-	if (iter == surface_rule[rule_index]._defect_check_area_index.end())
-		return {};
-
-	return iter->second;
+	for (const auto& item : *m_product_surface_rule)
+	{
+		vect.push_back(item.second);
+	}
 }
 
-std::optional<Rule_Manager::rule_result> Rule_Manager::is_defect_out_of_rule(int index, const QString& str_product_surface_name,
+std::optional<Rule_Manager::rule_result> Rule_Manager::is_defect_out_of_rule(const QString& str_product_surface_name,
 	const QString& str_defect_name,
 	const QPolygon& poly_countour,
 	const inspect_defect_attri_map& defect_attri,
-	const inspect_defect_gray_map& gray_attri,
-	const inspect_defect_gray_map& a_attri,
 	double scale)
 {
-	auto& surface_rule_vector = *((std::vector<Surface_Rule>*)m_rule);
-	if (index < 0 || index >= surface_rule_vector.size())
-		return { };
+	auto iter = (*m_product_surface_rule).find(str_product_surface_name.toStdWString());
+	if (iter == (*m_product_surface_rule).end())
+		return {};
 
-	auto& surface_rule_data = surface_rule_vector[index];   //具体找到某一个check_surface;
+	auto& rule_vector = iter->second.surface_rules;
 	struct Check_Result
 	{
 		int _current_level = -1;
@@ -172,37 +115,15 @@ std::optional<Rule_Manager::rule_result> Rule_Manager::is_defect_out_of_rule(int
 		}
 	};
 
-	const auto& rule_vector = surface_rule_data.surface_rules;
 
 	Check_Result result;
 	for (int rule_index = 0; rule_index < rule_vector.size(); rule_index++)
 	{
-		auto iter_surface_polygon = rule_vector[rule_index].rule_contours.find(str_product_surface_name);
-		if (iter_surface_polygon != rule_vector[rule_index].rule_contours.end())
+		if (!rule_vector[rule_index].is_intersected(poly_countour))
 		{
-			bool bintersected = false;
-			const auto& poly_vector = iter_surface_polygon->second;
-			if (!poly_vector.empty())
-			{
-				for (const auto& poly : poly_vector)
-				{
-					if (poly_countour.intersects(poly))
-					{
-						bintersected = true;
-						break;
-					}
-				}
-			}
-			else
-			{
-				bintersected = true;
-			}
-
-			if (!bintersected)
-			{
-				continue;
-			}
+			continue;
 		}
+				
 		const auto& levels = rule_vector[rule_index].rule_levels;
 		for (int level_index = 0; level_index < levels.size(); level_index++)
 		{
@@ -212,7 +133,7 @@ std::optional<Rule_Manager::rule_result> Rule_Manager::is_defect_out_of_rule(int
 				const auto& defect = defects[defect_index];
 				if (defect.str_defect_name == str_defect_name)
 				{
-					bool brule = defect.get_value(defect_attri, gray_attri, a_attri,scale);
+					bool brule = defect.get_value(defect_attri, scale);
 					if (brule)
 					{
 						result.update(levels[level_index].product_level.level, rule_index, level_index, defect_index);
@@ -224,17 +145,16 @@ std::optional<Rule_Manager::rule_result> Rule_Manager::is_defect_out_of_rule(int
 
 	if (result._current_level != -1)
 	{
-		auto& one_rule = surface_rule_vector[index].surface_rules[result._one_rule_index];
+		auto& one_rule = rule_vector[result._one_rule_index];
 		auto& rule_level = one_rule.rule_levels[result._level_index];
 		rule_level.defect_count_increase(result._defect_index);
-		auto iter = defect_attri.find(3);
+		auto iter = defect_attri.find(L"面积");
 		if (iter != defect_attri.end())
 		{
 			double mm_value = iter->second / scale / scale;
 			rule_level.defect_accumulate_area_increate(result._defect_index, mm_value);
 		}
 
-		bool is_ok = rule_level.product_level.is_ok;
 		rule_result ret;
 		ret.level = rule_level.product_level;
 		ret.rule_index = result._one_rule_index;
@@ -251,39 +171,43 @@ std::optional<Rule_Manager::rule_result> Rule_Manager::is_defect_out_of_rule(int
 	return { };
 }
 
-bool Rule_Manager::is_check_surface_ok(int index)
+int Rule_Manager::get_surface_level(const QString& str_product_surface_name)
 {
-	auto& surface_rule_vector = *((std::vector<Surface_Rule>*)m_rule);
-	if (index < 0 || index >= surface_rule_vector.size())
-		return true;
+	const auto& iter = (*m_product_surface_rule).find(str_product_surface_name.toStdWString());
+	if (iter == (*m_product_surface_rule).end())
+		return -1;
 
-	auto& surface_rule_data = surface_rule_vector[index];   //具体找到某一个check_surface;
-	for (const auto& one_surface : surface_rule_data.surface_rules)
+	int lowest = -1;
+	auto& surface_rule_data = iter->second.surface_rules;   //具体找到某一个check_surface;
+	for (const auto& one_rule : surface_rule_data)
 	{
-		for (const auto& one_level : one_surface.rule_levels)
+		for (const auto& one_level : one_rule.rule_levels)
 		{
 			if (one_level.bover_limit)
 			{
-				if (one_level.product_level.is_ok == false)
+				if (lowest == -1)
 				{
-					return false;
+					lowest = one_level.product_level.level;
+				}
+				else
+				{
+					if(one_level.product_level.level < lowest)
+						lowest = one_level.product_level.level;
 				}
 			}
 		}
 	}
 
-	return true;
-	
+	return lowest;	
 }
 
-void Rule_Manager::reset_check_surface(int index)
+void Rule_Manager::reset_check_surface(const QString& str_product_surface_name)
 {
-	auto& surface_rule_vector = *((std::vector<Surface_Rule>*)m_rule);
-	if (index < 0 || index >= surface_rule_vector.size())
+	const auto& iter = (*m_product_surface_rule).find(str_product_surface_name.toStdWString());
+	if (iter == (*m_product_surface_rule).end())
 		return;
 
-	auto& surface_rule_data = surface_rule_vector[index];   //具体找到某一个check_surface;
-	surface_rule_data.reset();
+	iter->second.reset();
 }
 
 /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -294,7 +218,7 @@ std::vector<Product_Level> Product_Level_Manager::get_product_levels() const
 
 void Product_Level_Manager::load_from_json(const QString& str_path)
 {
-	auto obj = read_json_document(str_path);
+	auto obj = read_json_document(str_path + "/product_level.json");
 	load_from_json(obj);
 }
 
@@ -306,28 +230,6 @@ void Product_Level_Manager::load_from_json(const QJsonObject& obj)
 	{
 		m_product_level.push_back(Product_Level_from_json(level_obj.toObject()));
 	}	
-}
-
-bool Product_Level_Manager::is_product_level_ok(int level) const
-{
-	for (const auto& item : m_product_level)
-	{
-		if (item.level == level)
-			return item.is_ok;
-	}
-
-	return false;
-}
-
-bool Product_Level_Manager::is_product_level_ok(const QString& str_level_name)
-{
-	for (const auto& item : m_product_level)
-	{
-		if (item.level == str_level_name)
-			return item.is_ok;
-	}
-
-	return false;
 }
 
 QColor Product_Level_Manager::get_product_level_color(int level) const
@@ -367,41 +269,41 @@ QColor Product_Level_Manager::get_product_level_trivial_color(const QString& str
 {
 	for (const auto& item : m_product_level)
 	{
-		if (item.level == str_level_name)
+		if (item.strLevelName == str_level_name)
 			return item.str_trivial_defect_color;
 	}
 
 	return {};
 }
 
+bool Product_Level_Manager::is_level_ok(int level)
+{
+	for (const auto& item : m_product_level)
+	{
+		if (item.level == level)
+			return item.is_ok;
+	}
 
-
-
-
-
-
+	return false;
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 namespace product_rule_module
 {
-	std::optional<Rule_Manager> PRODUCT_RULE_MODULE_EXPORT modify_product_rule(const Rule_Manager* src_rule, const product_info_manager* info_manager, const CheckSurfaceManager* surface_manager, const std::vector<Product_Level>& producb_levels)
+	void PRODUCT_RULE_MODULE_EXPORT modify_product_rule(Rule_Manager& src_rule,const std::vector<Product_Level>& product_levels)
 	{
 		RuleSettingDlg dlg;
 		Product_Rule rule;
-		src_rule->get_rules(rule);
-		dlg.set_data(info_manager, surface_manager, rule,producb_levels);
+		src_rule.get_rules(rule);
+		dlg.set_data(rule, product_levels);
 		dlg.init();
 		if (dlg.exec() == QDialog::Accepted)
 		{
-			auto rule  = dlg.get_product_rule();	
-			Rule_Manager manager;
-			manager.set_product_rule(rule);
-			return manager;
-		}
-
-		return {};
+			auto rule  = dlg.get_product_rule();			
+			src_rule.set_product_rule(rule);
+		}	
 	}
 }
 

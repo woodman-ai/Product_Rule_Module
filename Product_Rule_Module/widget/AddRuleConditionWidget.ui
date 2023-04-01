@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>339</width>
+    <width>342</width>
     <height>109</height>
    </rect>
   </property>
@@ -44,9 +44,6 @@
         </size>
        </property>
       </widget>
-     </item>
-     <item>
-      <widget class="QComboBox" name="combo_gray"/>
      </item>
      <item>
       <widget class="QComboBox" name="combo_relation">
